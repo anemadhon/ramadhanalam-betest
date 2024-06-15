@@ -46,6 +46,19 @@ export default class AuthService {
 			}
 		}
 
+		const userByAccountNumber = await this.userRepository.findByAccountNumber(
+			payload.account_number
+		)
+
+		if (userByAccountNumber?.userId) {
+			return {
+				status: 400,
+				data: {
+					message: `Data (nomor akun: ${payload.account_number}) sudah terdaftar`
+				}
+			}
+		}
+
 		const cuidUserId = init({ length: 12 })
 		const userId = cuidUserId()
 		const cuidRegistrationNumber = init({ length: 11 })
@@ -63,9 +76,18 @@ export default class AuthService {
 			fullName
 		})
 
-		await this.redis.storeObject(createdUser.userId, createdUser)
-		await this.redis.storeObject(createdUser.accountNumber, createdUser)
-		await this.redis.storeObject(createdUser.registrationNumber, createdUser)
+		await this.redis.storeObject(
+			createdUser.userId,
+			JSON.stringify(createdUser)
+		)
+		await this.redis.storeObject(
+			createdUser.accountNumber,
+			JSON.stringify(createdUser)
+		)
+		await this.redis.storeObject(
+			createdUser.registrationNumber,
+			JSON.stringify(createdUser)
+		)
 
 		return {
 			status: 200,

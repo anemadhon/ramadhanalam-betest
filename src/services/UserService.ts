@@ -91,15 +91,15 @@ export default class UserService {
 		if (updated) {
 			await this.redis.updateObject(
 				`${REDIS.NAME}:object_${updated.userId}`,
-				updated
+				JSON.stringify(updated)
 			)
 			await this.redis.updateObject(
 				`${REDIS.NAME}:${updated.accountNumber}`,
-				updated
+				JSON.stringify(updated)
 			)
 			await this.redis.updateObject(
 				`${REDIS.NAME}:${updated.registrationNumber}`,
-				updated
+				JSON.stringify(updated)
 			)
 		}
 

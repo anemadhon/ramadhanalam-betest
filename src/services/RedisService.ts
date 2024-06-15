@@ -11,15 +11,21 @@ export default class RedisService {
 		this.redis = new Redis()
 	}
 
-	async storeObject(key: string, obj: UserInterface): Promise<void> {
+	async storeObject(key: string, obj: string): Promise<void> {
 		const newKey =
 			key.length === 12 ? `${REDIS.NAME}:object_${key}` : `${REDIS.NAME}:${key}`
 
-		await this.redis.hmset(newKey, obj)
+		await this.redis.set(newKey, obj)
 	}
 
 	async getObject(key: string): Promise<Record<string, string> | null> {
-		return await this.redis.hgetall(key)
+		const obj = await this.redis.get(key)
+
+		if (!obj) {
+			return null
+		}
+
+		return JSON.parse(obj)
 	}
 
 	async getArrayOfObjects(): Promise<Record<string, string>[]> {
@@ -27,18 +33,20 @@ export default class RedisService {
 		const keys = await this.redis.keys(`${REDIS.NAME}:object_*`)
 
 		for (const key of keys) {
-			const obj = await this.redis.hgetall(key)
+			const obj = await this.redis.get(key)
 
-			arrayOfObjects.push(obj)
+			if (obj) {
+				arrayOfObjects.push(JSON.parse(obj))
+			}
 		}
 
 		return arrayOfObjects
 	}
 
-	async updateObject(key: string, newData: UserInterface): Promise<void> {
+	async updateObject(key: string, newData: string): Promise<void> {
 		const newKey = `${REDIS.NAME}:object_${key}`
 
-		await this.redis.hmset(newKey, newData)
+		await this.redis.set(newKey, newData)
 	}
 
 	async deleteObject(key: string): Promise<void> {
