@@ -33,15 +33,26 @@ export default class AuthService {
 		// 	}
 		// }
 
-		const checkingData = await this.userRepository.findByUsername(
+		const userByUsername = await this.userRepository.findByUsername(
 			payload.username
 		)
 
-		if (checkingData?.userId) {
+		if (userByUsername?.userId) {
 			return {
 				status: 400,
 				data: {
-					message: `Data (username: ${payload.username}, email: ${payload.email}) sudah terdaftar`
+					message: `Data (username: ${payload.username}) sudah terdaftar`
+				}
+			}
+		}
+
+		const userByEmail = await this.userRepository.findByEmail(payload.email)
+
+		if (userByEmail?.userId) {
+			return {
+				status: 400,
+				data: {
+					message: `Data (email: ${payload.email}) sudah terdaftar`
 				}
 			}
 		}

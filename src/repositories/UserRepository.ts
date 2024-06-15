@@ -88,6 +88,14 @@ export default class UserRepository {
 			.exec()
 	}
 
+	async findByEmail(email: string): Promise<UserInterface | null> {
+		return await this.userModel
+			.findOne({ emailAddress: email })
+			.select('-_id -__v')
+			.lean()
+			.exec()
+	}
+
 	async findById(
 		whereClause: Pick<UserInterface, 'userId'>
 	): Promise<UserInterface | null> {
