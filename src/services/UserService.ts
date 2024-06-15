@@ -112,7 +112,7 @@ export default class UserService {
 	async deleteData(
 		id: string
 	): Promise<ServicesResponse<{ deletedCount?: number }>> {
-		const user = await this.userRepository.findById({ userId: id })
+		const user = await this.userRepository.findById(id)
 		const deleted = await this.userRepository.delete(id)
 
 		if (deleted && user) {

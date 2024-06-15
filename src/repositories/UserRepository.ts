@@ -96,11 +96,9 @@ export default class UserRepository {
 			.exec()
 	}
 
-	async findById(
-		whereClause: Pick<UserInterface, 'userId'>
-	): Promise<UserInterface | null> {
+	async findById(userId: string): Promise<UserInterface | null> {
 		return await this.userModel
-			.findOne({ whereClause })
+			.findOne({ userId })
 			.select('-_id -__v')
 			.lean()
 			.exec()

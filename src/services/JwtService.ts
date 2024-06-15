@@ -5,8 +5,7 @@ import UserRepository from '../repositories/UserRepository'
 import User from '../models/User'
 import { ServicesResponse } from '../types/responseType'
 
-// const redis = new Redis()
-const { JWT } = ENV
+const { JWT, REDIS } = ENV
 const jwtAccessTokenExp = JWT.ACCESS_EXPIRED_IN
 const jwtAccessTokenSecret = JWT.SECRET
 const jwtrefreshTokenEpx = JWT.REFRESH_EXPIRED_IN
@@ -52,7 +51,7 @@ export default class JwtService {
 
 		const accessToken = await this.generateToken({
 			id: user.userId,
-			type: 'refresh'
+			type: 'access'
 		})
 		const refreshToken = await this.generateToken({
 			id: user.userId,
@@ -76,16 +75,16 @@ export default class JwtService {
 			jwtrefreshTokenSecret
 		) as JwtPayload
 
-		// if (decoded && 'exp' in decoded && decoded?.exp < Date.now() / 1000) {
-		// 	return {
-		// 		status: 401,
-		// 		data: {
-		// 			message: 'Refresh token telah kadaluarsa'
-		// 		}
-		// 	}
-		// }
+		if (decoded.exp && decoded.exp < Math.ceil(Date.now() / 1000)) {
+			return {
+				status: 401,
+				data: {
+					message: 'Refresh token telah kadaluarsa'
+				}
+			}
+		}
 
-		const user = await this.userRepository.findById({ userId: decoded.id })
+		const user = await this.userRepository.findById(decoded.id)
 
 		if (!user) {
 			return { status: 404, data: { message: 'username tidak ditemukan' } }
@@ -93,7 +92,7 @@ export default class JwtService {
 
 		const accessToken = await this.generateToken({
 			id: user.userId,
-			type: 'refresh'
+			type: 'access'
 		})
 
 		return {
@@ -107,7 +106,7 @@ export default class JwtService {
 	async makeTokenExpires(
 		token: string
 	): Promise<ServicesResponse<{ message: string }>> {
-		await this.redis.sadd('blacklist', token)
+		await this.redis.sadd(`${REDIS.NAME}:blacklist`, token)
 
 		return {
 			status: 200,
@@ -118,7 +117,7 @@ export default class JwtService {
 	}
 
 	async isTokenBlacklisted(token: string): Promise<boolean> {
-		const result = await this.redis.sismember('blacklist', token)
+		const result = await this.redis.sismember(`${REDIS.NAME}:blacklist`, token)
 
 		return result === 1
 	}
