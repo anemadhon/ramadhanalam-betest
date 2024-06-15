@@ -22,17 +22,6 @@ export default class AuthService {
 			Pick<UserInterface, 'userId' | 'registrationNumber'> | { message: string }
 		>
 	> {
-		// const userAccountNumber = await this.userRepository.findByAccountNumber(
-		// 	payload.account_number
-		// )
-
-		// if (!userAccountNumber) {
-		// 	return {
-		// 		status: 404,
-		// 		data: { message: 'Anda belum menjadi nasabah Bank BTPN' }
-		// 	}
-		// }
-
 		const userByUsername = await this.userRepository.findByUsername(
 			payload.username
 		)

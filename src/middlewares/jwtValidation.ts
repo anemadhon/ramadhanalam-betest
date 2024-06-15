@@ -43,7 +43,7 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
 
 	try {
 		const decoded = jwt.verify(token, jwtAccessTokenSecret) as JwtPayload
-		console.log('decoded', decoded)
+
 		;(req as CustomRequest).token = decoded.id
 		next()
 	} catch (err) {
