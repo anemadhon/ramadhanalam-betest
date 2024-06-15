@@ -19,12 +19,10 @@ const accountSchema = new Schema(
 		},
 		userName: {
 			type: String,
-			unique: true,
 			required: true
 		},
 		password: {
 			type: String,
-			unique: true,
 			required: true
 		},
 		lastLoginDateTime: {
@@ -34,7 +32,6 @@ const accountSchema = new Schema(
 		userId: {
 			type: String,
 			ref: 'users',
-			unique: true,
 			required: true
 		}
 	},
