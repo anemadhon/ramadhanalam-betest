@@ -4,7 +4,7 @@ export interface AccountInterface extends Document {
 	accountId: string
 	userName: string
 	password: string
-	userId: Schema.Types.ObjectId
+	userId: string
 	lastLoginDateTime: Date
 	createdAt: Date
 	updatedAt: Date
@@ -32,8 +32,8 @@ const accountSchema = new Schema(
 			default: Date.now
 		},
 		userId: {
-			type: Schema.Types.ObjectId,
-			ref: 'user',
+			type: String,
+			ref: 'users',
 			unique: true,
 			required: true
 		}
@@ -41,4 +41,4 @@ const accountSchema = new Schema(
 	{ timestamps: true }
 )
 
-export default model<AccountInterface>('account', accountSchema)
+export default model<AccountInterface>('accounts', accountSchema)
