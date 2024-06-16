@@ -19,12 +19,12 @@ router.post(
 	validatePayloadSchema(lists),
 	userController.read.bind(userController)
 )
-router.post(
+router.get(
 	'/:account_number',
 	validateParamSchema(readByAccountNumber),
 	userController.readByAccountNumber.bind(userController)
 )
-router.post(
+router.get(
 	'/:registration_number',
 	validateParamSchema(readByRegistrationNumber),
 	userController.readByRegistrationNumber.bind(userController)
