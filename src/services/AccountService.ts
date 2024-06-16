@@ -19,12 +19,21 @@ export default class AccountService {
 	}
 
 	async logAccount(payload: Login & { userId: string }): Promise<void> {
-		const cuidAccountId = init({ length: 12 })
-		const accountId = cuidAccountId()
+		const account = await this.accountRepository.findByUserId(payload.userId)
 
-		await this.accountRepository.create({
-			...payload,
-			accountId
-		})
+		if (account?.userId) {
+			await this.accountRepository.update(
+				{ accountId: account.accountId },
+				{ $set: { lastLoginDateTime: Date.now() } }
+			)
+		} else {
+			const cuidAccountId = init({ length: 12 })
+			const accountId = cuidAccountId()
+
+			await this.accountRepository.create({
+				...payload,
+				accountId
+			})
+		}
 	}
 }

@@ -32,7 +32,7 @@ export default class AccountRepository {
 	async findAll(query: QueryTypeAccount): Promise<AccountInterface[]> {
 		const currentDatetime = dayjs()
 		const threeDaysBefore = currentDatetime.subtract(3, 'day')
-		const whereClause: FilterQuery<AccountInterface> = {
+		const whereClause: FilterQuery<Partial<AccountInterface>> = {
 			lastLoginDateTime: { $gte: threeDaysBefore.toDate() }
 		}
 
@@ -55,6 +55,24 @@ export default class AccountRepository {
 			.limit(limit as number)
 			.sort(sort)
 			.select('-_id -__v')
+			.lean()
+			.exec()
+	}
+
+	async findByUserId(userId: string): Promise<AccountInterface | null> {
+		return await this.accountModel
+			.findOne({ userId })
+			.select('-_id -__v')
+			.lean()
+			.exec()
+	}
+
+	async update(
+		whereClause: FilterQuery<Partial<AccountInterface>>,
+		toBeUpdated: FilterQuery<Partial<AccountInterface>>
+	): Promise<AccountInterface | null> {
+		return await this.accountModel
+			.findOneAndUpdate(whereClause, toBeUpdated)
 			.lean()
 			.exec()
 	}
