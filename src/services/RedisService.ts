@@ -1,5 +1,4 @@
 import Redis from 'ioredis'
-import { UserInterface } from '../models/User'
 import { ENV } from '../utils/constants'
 
 const { REDIS } = ENV
@@ -12,10 +11,7 @@ export default class RedisService {
 	}
 
 	async storeObject(key: string, obj: string): Promise<void> {
-		const newKey =
-			key.length === 12 ? `${REDIS.NAME}:object_${key}` : `${REDIS.NAME}:${key}`
-
-		await this.redis.set(newKey, obj)
+		await this.redis.set(key, obj)
 	}
 
 	async getObject(key: string): Promise<Record<string, string> | null> {
@@ -44,14 +40,22 @@ export default class RedisService {
 	}
 
 	async updateObject(key: string, newData: string): Promise<void> {
-		const newKey = `${REDIS.NAME}:object_${key}`
-
-		await this.redis.set(newKey, newData)
+		await this.redis.set(key, newData)
 	}
 
 	async deleteObject(key: string): Promise<void> {
-		const newKey = `${REDIS.NAME}:object_${key}`
+		await this.redis.del(key)
+	}
 
-		await this.redis.del(newKey)
+	async storeSetsMember(key: string, data: string): Promise<void> {
+		await this.redis.sadd(key, data)
+	}
+
+	async checkSetsMember(key: string, data: string): Promise<number> {
+		return await this.redis.sismember(key, data)
+	}
+
+	async getSetsMember(key: string): Promise<string[]> {
+		return await this.redis.smembers(key)
 	}
 }

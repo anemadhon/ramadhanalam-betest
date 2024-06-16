@@ -1,4 +1,6 @@
+import Account from '../models/Account'
 import User, { UserInterface } from '../models/User'
+import AccountRepository from '../repositories/AccountRepository'
 import UserRepository, { QueryType } from '../repositories/UserRepository'
 import { UserUpdate } from '../schemas/userSchema'
 import RedisService from '../services/RedisService'
@@ -9,17 +11,19 @@ const { REDIS } = ENV
 
 export default class UserService {
 	private userRepository: UserRepository
-	private redis
+	private accountRepository: AccountRepository
+	private redisService: RedisService
 
 	constructor() {
 		this.userRepository = new UserRepository(User)
-		this.redis = new RedisService()
+		this.accountRepository = new AccountRepository(Account)
+		this.redisService = new RedisService()
 	}
 
 	async getData(
 		query: QueryType
 	): Promise<ServicesResponse<UserInterface[] | Record<string, string>[]>> {
-		const usersArrayOfObj = await this.redis.getArrayOfObjects()
+		const usersArrayOfObj = await this.redisService.getArrayOfObjects()
 
 		if (usersArrayOfObj.length) {
 			return {
@@ -34,7 +38,9 @@ export default class UserService {
 	async getDataByAccountNumber(
 		accountNumber: string
 	): Promise<ServicesResponse<UserInterface | Record<string, string>>> {
-		const redisObj = await this.redis.getObject(accountNumber)
+		const redisObj = await this.redisService.getObject(
+			`${REDIS.NAME}:${accountNumber}`
+		)
 
 		if (redisObj?.userId) {
 			return {
@@ -54,7 +60,9 @@ export default class UserService {
 	async getDataByRegistrationNumber(
 		registrationNumber: string
 	): Promise<ServicesResponse<UserInterface | Record<string, string>>> {
-		const redisObj = await this.redis.getObject(registrationNumber)
+		const redisObj = await this.redisService.getObject(
+			`${REDIS.NAME}:${registrationNumber}`
+		)
 
 		if (redisObj?.userId) {
 			return {
@@ -89,15 +97,15 @@ export default class UserService {
 		)
 
 		if (updated) {
-			await this.redis.updateObject(
+			await this.redisService.updateObject(
 				`${REDIS.NAME}:object_${updated.userId}`,
 				JSON.stringify(updated)
 			)
-			await this.redis.updateObject(
+			await this.redisService.updateObject(
 				`${REDIS.NAME}:${updated.accountNumber}`,
 				JSON.stringify(updated)
 			)
-			await this.redis.updateObject(
+			await this.redisService.updateObject(
 				`${REDIS.NAME}:${updated.registrationNumber}`,
 				JSON.stringify(updated)
 			)
@@ -132,9 +140,13 @@ export default class UserService {
 			}
 		}
 
-		await this.redis.deleteObject(`${REDIS.NAME}:object_${id}`)
-		await this.redis.deleteObject(`${REDIS.NAME}:${user.accountNumber}`)
-		await this.redis.deleteObject(`${REDIS.NAME}:${user.registrationNumber}`)
+		await this.accountRepository.delete(user.userId)
+		await this.redisService.deleteObject(`${REDIS.NAME}:object_${user.userId}`)
+		await this.redisService.deleteObject(`${REDIS.NAME}:${user.accountNumber}`)
+		await this.redisService.deleteObject(
+			`${REDIS.NAME}:${user.registrationNumber}`
+		)
+		await this.redisService.deleteObject(`${REDIS.NAME}:token_${user.userId}`)
 
 		return {
 			status: 200,

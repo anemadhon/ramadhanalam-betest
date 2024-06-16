@@ -1,9 +1,9 @@
 import jwt, { JwtPayload } from 'jsonwebtoken'
-import Redis from 'ioredis'
 import { ENV } from '../utils/constants'
 import UserRepository from '../repositories/UserRepository'
 import User from '../models/User'
 import { ServicesResponse } from '../types/responseType'
+import RedisService from './RedisService'
 
 const { JWT, REDIS } = ENV
 const jwtAccessTokenExp = JWT.ACCESS_EXPIRED_IN
@@ -13,11 +13,11 @@ const jwtrefreshTokenSecret = JWT.SECRET_REFRESH
 
 export default class JwtService {
 	private userRepository: UserRepository
-	private redis: Redis
+	private redisService: RedisService
 
 	constructor() {
 		this.userRepository = new UserRepository(User)
-		this.redis = new Redis()
+		this.redisService = new RedisService()
 	}
 
 	private async generateToken(data: {
@@ -34,32 +34,29 @@ export default class JwtService {
 		return jwt.sign({ id }, secret, expiredIn)
 	}
 
-	async generateJWTToken(username: string): Promise<
-		ServicesResponse<
-			| {
-					access_token: string
-					refresh_token: string
-			  }
-			| { message: string }
-		>
+	async generateJWTToken(userId: string): Promise<
+		ServicesResponse<{
+			access_token: string
+			refresh_token: string
+		}>
 	> {
-		const user = await this.userRepository.findByUsername(username)
-
-		if (!user) {
-			return { status: 404, data: { message: 'username tidak ditemukan' } }
-		}
-
 		const accessToken = await this.generateToken({
-			id: user.userId,
+			id: userId,
 			type: 'access'
 		})
 		const refreshToken = await this.generateToken({
-			id: user.userId,
+			id: userId,
 			type: 'refresh'
 		})
 
-		await this.redis.sadd(`${REDIS.NAME}:token_${user.userId}`, accessToken)
-		await this.redis.sadd(`${REDIS.NAME}:token_${user.userId}`, refreshToken)
+		await this.redisService.storeSetsMember(
+			`${REDIS.NAME}:token_${userId}`,
+			accessToken
+		)
+		await this.redisService.storeSetsMember(
+			`${REDIS.NAME}:token_${userId}`,
+			refreshToken
+		)
 
 		return {
 			status: 200,
@@ -74,7 +71,7 @@ export default class JwtService {
 		refreshToken: string,
 		userId: string
 	): Promise<ServicesResponse<{ access_token: string } | { message: string }>> {
-		const refreshTokenExist = await this.redis.sismember(
+		const refreshTokenExist = await this.redisService.checkSetsMember(
 			`${REDIS.NAME}:token_${userId}`,
 			refreshToken
 		)
@@ -93,7 +90,6 @@ export default class JwtService {
 			jwtrefreshTokenSecret
 		) as JwtPayload
 
-		console.log(decoded.exp, Math.ceil(Date.now() / 1000))
 		if (decoded.exp && decoded.exp < Math.ceil(Date.now() / 1000)) {
 			return {
 				status: 401,
@@ -123,12 +119,15 @@ export default class JwtService {
 	}
 
 	async makeTokenExpires(token: string, userId: string): Promise<void> {
-		await this.redis.sadd(`${REDIS.NAME}:blacklist`, token)
-		await this.redis.del(`${REDIS.NAME}:token_${userId}`)
+		await this.redisService.storeSetsMember(`${REDIS.NAME}:blacklist`, token)
+		await this.redisService.deleteObject(`${REDIS.NAME}:token_${userId}`)
 	}
 
 	async isTokenBlacklisted(token: string): Promise<boolean> {
-		const result = await this.redis.sismember(`${REDIS.NAME}:blacklist`, token)
+		const result = await this.redisService.checkSetsMember(
+			`${REDIS.NAME}:blacklist`,
+			token
+		)
 
 		return result === 1
 	}
