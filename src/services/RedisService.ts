@@ -32,7 +32,12 @@ export default class RedisService {
 			const obj = await this.redis.get(key)
 
 			if (obj) {
-				arrayOfObjects.push(JSON.parse(obj))
+				const user = JSON.parse(obj)
+
+				delete user['_id']
+				delete user['__v']
+
+				arrayOfObjects.push(user)
 			}
 		}
 
