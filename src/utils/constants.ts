@@ -10,7 +10,6 @@ const STATUSCODE: StatusCodeMap = {
 	'201': { text: 'CREATED' },
 	'400': { text: 'BAD REQUEST' },
 	'401': { text: 'UNAUTHORIZE' },
-	'403': { text: 'FORBIDEN' },
 	'404': { text: 'NOT FOUND' },
 	'500': { text: 'SERVER ERROR' }
 }

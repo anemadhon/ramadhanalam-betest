@@ -14,13 +14,12 @@ export type ServicesResponse<TData> = Omit<
 > & {
 	status: number
 }
-export type StatusCode = '200' | '201' | '400' | '401' | '403' | '404' | '500'
+export type StatusCode = '200' | '201' | '400' | '401' | '404' | '500'
 export type StatusText =
 	| 'OK'
 	| 'CREATED'
 	| 'BAD REQUEST'
 	| 'UNAUTHORIZE'
-	| 'FORBIDEN'
 	| 'NOT FOUND'
 	| 'SERVER ERROR'
 export type StatusCodeMap = {
