@@ -76,4 +76,8 @@ export default class AccountRepository {
 			.lean()
 			.exec()
 	}
+
+	async delete(id: string): Promise<{ deletedCount?: number }> {
+		return await this.accountModel.deleteOne({ userId: id }).exec()
+	}
 }
