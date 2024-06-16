@@ -3,16 +3,25 @@ import bcrypt from 'bcrypt'
 import User, { UserInterface } from '../models/User'
 import RedisService from './RedisService'
 import UserRepository from '../repositories/UserRepository'
-import { UserRegistration } from '../schemas/authSchema'
+import { Login, UserRegistration } from '../schemas/authSchema'
 import { ServicesResponse } from '../types/responseType'
+import { ENV } from '../utils/constants'
+import JwtService from './JwtService'
+import AccountService from './AccountService'
+
+const { REDIS } = ENV
 
 export default class AuthService {
 	private userRepository: UserRepository
-	private redis
+	private redisService: RedisService
+	private jwtService: JwtService
+	private accountService: AccountService
 
 	constructor() {
 		this.userRepository = new UserRepository(User)
-		this.redis = new RedisService()
+		this.redisService = new RedisService()
+		this.jwtService = new JwtService()
+		this.accountService = new AccountService()
 	}
 
 	async registration(
@@ -76,16 +85,16 @@ export default class AuthService {
 			fullName
 		})
 
-		await this.redis.storeObject(
-			createdUser.userId,
+		await this.redisService.storeObject(
+			`${REDIS.NAME}:object_${createdUser.userId}`,
 			JSON.stringify(createdUser)
 		)
-		await this.redis.storeObject(
-			createdUser.accountNumber,
+		await this.redisService.storeObject(
+			`${REDIS.NAME}:${createdUser.accountNumber}`,
 			JSON.stringify(createdUser)
 		)
-		await this.redis.storeObject(
-			createdUser.registrationNumber,
+		await this.redisService.storeObject(
+			`${REDIS.NAME}:${createdUser.registrationNumber}`,
 			JSON.stringify(createdUser)
 		)
 
@@ -98,21 +107,56 @@ export default class AuthService {
 		}
 	}
 
-	async checkUsername(username: string) {
-		const checkingData = await this.userRepository.findByUsername(username)
+	async login(payload: Login): Promise<
+		ServicesResponse<
+			| {
+					user: UserInterface
+					token: { access_token: string; refresh_token: string }
+			  }
+			| { message: string }
+		>
+	> {
+		const user = await this.userRepository.findByUsername(payload.username)
 
-		if (!checkingData) {
+		if (!user?.userId) {
 			return {
 				status: 404,
 				data: {
-					message: `Data (username: ${username}) tidak ditemukan`
+					message: `Data (username: ${payload.username}) tidak ditemukan`
 				}
 			}
 		}
 
+		const passwordMatched = await bcrypt.compare(
+			payload.password,
+			user.password
+		)
+
+		if (!passwordMatched) {
+			return {
+				status: 400,
+				data: {
+					message: `Silakan masukan username & password yang benar`
+				}
+			}
+		}
+
+		const token = await this.jwtService.generateJWTToken(user.userId)
+
+		await this.accountService.logAccount({
+			...payload,
+			userId: user.userId
+		})
+
 		return {
 			status: 200,
-			data: checkingData
+			data: {
+				user,
+				token: token.data as {
+					access_token: string
+					refresh_token: string
+				}
+			}
 		}
 	}
 }

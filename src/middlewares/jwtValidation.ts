@@ -18,30 +18,30 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
 	const headerToken = req.headers['authorization']
 
 	if (!headerToken?.startsWith('Bearer ')) {
-		return res.status(403).json({
-			status: '403',
-			message: STATUSCODE['403'].text,
-			error: { message: 'token tidak ditemukan' }
+		return res.status(401).json({
+			status: '401',
+			message: STATUSCODE['401'].text,
+			error: { message: 'Token tidak ditemukan' }
 		})
 	}
 
 	const token = headerToken.slice(7)
 
 	if (!token) {
-		return res.status(403).json({
-			status: '403',
-			message: STATUSCODE['403'].text,
-			error: { message: 'token tidak valid' }
+		return res.status(401).json({
+			status: '401',
+			message: STATUSCODE['401'].text,
+			error: { message: 'Token tidak valid' }
 		})
 	}
 
 	const tokenIsBlackListed = await jwtService.isTokenBlacklisted(token)
 
 	if (tokenIsBlackListed) {
-		return res.status(403).json({
-			status: '403',
-			message: STATUSCODE['403'].text,
-			error: { message: 'token sudah tidak dapat digunakan' }
+		return res.status(401).json({
+			status: '401',
+			message: STATUSCODE['401'].text,
+			error: { message: 'Token sudah tidak dapat digunakan' }
 		})
 	}
 

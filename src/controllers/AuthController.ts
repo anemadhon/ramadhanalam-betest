@@ -1,9 +1,7 @@
 import { Request, Response } from 'express'
-import bcrypt from 'bcrypt'
 import { ENV } from '../utils/constants'
 import AuthService from '../services/AuthService'
 import JwtService from '../services/JwtService'
-import AccountService from '../services/AccountService'
 import { ResponseApi } from './UserController'
 import { UserInterface } from '../models/User'
 import { Login, UserRegistration } from '../schemas/authSchema'
@@ -20,23 +18,26 @@ export type ErrorResponse<TType> = ApiResponseError<TType>
 export default class AuthController {
 	private authService: AuthService
 	private jwtService: JwtService
-	private accountService: AccountService
 
 	constructor() {
 		this.authService = new AuthService()
 		this.jwtService = new JwtService()
-		this.accountService = new AccountService()
 	}
 
 	async register(
 		req: Request,
 		res: Response
-	): Promise<ResponseApi<UserInterface>> {
+	): Promise<
+		ResponseApi<
+			Pick<UserInterface, 'userId' | 'registrationNumber'> | { message: string }
+		>
+	> {
 		try {
 			const payload: UserRegistration = req.body
 			const registered = await this.authService.registration(payload)
 			const responses: SuccessResponse<
-				Pick<UserInterface, 'userId'> | { message: string }
+				| Pick<UserInterface, 'userId' | 'registrationNumber'>
+				| { message: string }
 			> = {
 				status: `${registered.status}`,
 				message: STATUSCODE[`${registered.status}` as StatusCode].text,
@@ -64,48 +65,20 @@ export default class AuthController {
 	): Promise<
 		ResponseApi<
 			| {
-					access_token: string
-					refresh_token: string
+					user: UserInterface
+					token: { access_token: string; refresh_token: string }
 			  }
 			| { message: string }
 		>
 	> {
 		try {
 			const payload: Login = req.body
-			const dataUser = await this.authService.checkUsername(payload.username)
+			const userLogin = await this.authService.login(payload)
 
-			if (dataUser.status === 404) {
-				return res.status(dataUser.status).json({
-					status: `${dataUser.status}`,
-					message: STATUSCODE[`${dataUser.status}` as StatusCode].text,
-					data: dataUser?.data
-				})
-			}
-
-			const passwordMatched = await bcrypt.compare(
-				payload.password,
-				(dataUser.data as UserInterface).password
-			)
-
-			if (!passwordMatched) {
-				return res.status(400).json({
-					status: '400',
-					message: STATUSCODE['400'].text,
-					data: { message: 'Silakan masukan username & password yang benar' }
-				})
-			}
-
-			const token = await this.jwtService.generateJWTToken(payload.username)
-
-			await this.accountService.logAccount({
-				...payload,
-				userId: (dataUser.data as UserInterface).userId
-			})
-
-			return res.status(token.status).json({
-				status: `${token.status}`,
-				message: STATUSCODE[`${token.status}` as StatusCode].text,
-				data: token?.data
+			return res.status(userLogin.status).json({
+				status: `${userLogin.status}`,
+				message: STATUSCODE[`${userLogin.status}` as StatusCode].text,
+				data: userLogin?.data
 			})
 		} catch (error) {
 			console.error('err exports.login trycatch', { error })
@@ -125,22 +98,16 @@ export default class AuthController {
 		req: Request,
 		res: Response
 	): Promise<ResponseApi<{ message: string }>> {
-		const headerToken = req.headers['authorization']
-
-		if (!headerToken?.startsWith('Bearer ')) {
-			return res.status(403).json({
-				status: '403',
-				message: STATUSCODE[403].text
-			})
-		}
-
-		const token = headerToken.slice(7)
-		const id = req.body.user_id
-
 		try {
-			await this.jwtService.makeTokenExpires(token, id)
+			await this.jwtService.makeTokenExpires(
+				(req.headers['authorization'] as string).slice(7),
+				req.body.user_id
+			)
 
-			return res.status(204).json()
+			return res.status(204).json({
+				status: '204',
+				message: 'NO CONTENT'
+			})
 		} catch (error) {
 			console.error('err exports.logout trycatch', { error })
 			const responses: ErrorResponse<{ message: string }> = {
