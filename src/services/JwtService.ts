@@ -122,19 +122,9 @@ export default class JwtService {
 		}
 	}
 
-	async makeTokenExpires(
-		token: string,
-		userId: string
-	): Promise<ServicesResponse<{ message: string }>> {
+	async makeTokenExpires(token: string, userId: string): Promise<void> {
 		await this.redis.sadd(`${REDIS.NAME}:blacklist`, token)
 		await this.redis.del(`${REDIS.NAME}:token_${userId}`)
-
-		return {
-			status: 204,
-			data: {
-				message: 'token berhasil dinonaktifkan'
-			}
-		}
 	}
 
 	async isTokenBlacklisted(token: string): Promise<boolean> {

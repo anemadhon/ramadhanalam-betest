@@ -138,13 +138,9 @@ export default class AuthController {
 		const id = req.body.user_id
 
 		try {
-			const endedToken = await this.jwtService.makeTokenExpires(token, id)
+			await this.jwtService.makeTokenExpires(token, id)
 
-			return res.status(endedToken.status).json({
-				status: `${endedToken.status}`,
-				message: STATUSCODE[`${endedToken.status}` as StatusCode].text,
-				data: endedToken?.data
-			})
+			return res.status(204).json()
 		} catch (error) {
 			console.error('err exports.logout trycatch', { error })
 			const responses: ErrorResponse<{ message: string }> = {
