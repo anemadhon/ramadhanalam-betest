@@ -102,7 +102,7 @@ export default class JwtService {
 		const user = await this.userRepository.findById(decoded.id)
 
 		if (!user) {
-			return { status: 404, data: { message: 'username tidak ditemukan' } }
+			return { status: 404, data: { message: 'Data tidak ditemukan' } }
 		}
 
 		const accessToken = await this.generateToken({
