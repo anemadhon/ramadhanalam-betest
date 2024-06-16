@@ -156,10 +156,10 @@ export default class UserController {
 	async deleteUser(
 		req: Request,
 		res: Response
-	): Promise<ResponseApi<{ deletedCount?: number }>> {
+	): Promise<ResponseApi<{ message: string }>> {
 		try {
-			const deletedUser = await this.userService.deleteData(req.body.id)
-			const responses: SuccessResponse<{ deletedCount?: number }> = {
+			const deletedUser = await this.userService.deleteData(req.body.user_id)
+			const responses: SuccessResponse<{ message: string }> = {
 				status: `${deletedUser.status}`,
 				message: STATUSCODE[`${deletedUser.status}` as StatusCode].text,
 				data: deletedUser.data

@@ -109,21 +109,38 @@ export default class UserService {
 		}
 	}
 
-	async deleteData(
-		id: string
-	): Promise<ServicesResponse<{ deletedCount?: number }>> {
+	async deleteData(id: string): Promise<ServicesResponse<{ message: string }>> {
 		const user = await this.userRepository.findById(id)
-		const deleted = await this.userRepository.delete(id)
 
-		if (deleted && user) {
-			await this.redis.deleteObject(`${REDIS.NAME}:object_${id}`)
-			await this.redis.deleteObject(`${REDIS.NAME}:${user.accountNumber}`)
-			await this.redis.deleteObject(`${REDIS.NAME}:${user.registrationNumber}`)
+		if (!user) {
+			return {
+				status: 404,
+				data: {
+					message: 'User tidak ditemukan'
+				}
+			}
 		}
 
+		const deleted = await this.userRepository.delete(user.userId)
+
+		if (!deleted.deletedCount) {
+			return {
+				status: 500,
+				data: {
+					message: 'Gagal hapus data'
+				}
+			}
+		}
+
+		await this.redis.deleteObject(`${REDIS.NAME}:object_${id}`)
+		await this.redis.deleteObject(`${REDIS.NAME}:${user.accountNumber}`)
+		await this.redis.deleteObject(`${REDIS.NAME}:${user.registrationNumber}`)
+
 		return {
-			status: deleted ? 200 : 404,
-			data: deleted
+			status: 200,
+			data: {
+				message: 'Berhasil hapus data'
+			}
 		}
 	}
 }

@@ -7,7 +7,7 @@ import { Request, Response, NextFunction } from 'express'
 import { ENV } from '../utils/constants'
 import JwtService from '../services/JwtService'
 
-interface CustomRequest extends Request {
+export interface CustomRequest extends Request {
 	token: string | JwtPayload
 }
 
