@@ -40,11 +40,11 @@ export default class AccountController {
 					value: req.body.order.value || 'desc'
 				}
 			}
-			const users = await this.accountService.getData(query)
+			const accounts = await this.accountService.getData(query)
 			const responses: SuccessResponse<AccountInterface[]> = {
-				status: `${users.status}`,
-				message: STATUSCODE[`${users.status}` as StatusCode].text,
-				data: users.data
+				status: `${accounts.status}`,
+				message: STATUSCODE[`${accounts.status}` as StatusCode].text,
+				data: accounts.data
 			}
 
 			return res.status(200).json(responses)

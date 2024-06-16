@@ -83,7 +83,7 @@ export default class UserRepository {
 	async findByUsername(userName: string): Promise<UserInterface | null> {
 		return await this.userModel
 			.findOne({ userName })
-			.select('-_id -__v')
+			.select('-__v')
 			.lean()
 			.exec()
 	}

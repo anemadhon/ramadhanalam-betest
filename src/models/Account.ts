@@ -1,4 +1,4 @@
-import { Schema, model, Document } from 'mongoose'
+import mongoose, { Schema, model, Document } from 'mongoose'
 
 export interface AccountInterface extends Document {
 	accountId: string
@@ -30,7 +30,7 @@ const accountSchema = new Schema(
 			default: Date.now
 		},
 		userId: {
-			type: String,
+			type: Schema.Types.ObjectId,
 			ref: 'users',
 			required: true
 		}

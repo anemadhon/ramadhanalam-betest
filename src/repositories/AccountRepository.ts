@@ -50,7 +50,10 @@ export default class AccountRepository {
 
 		return await this.accountModel
 			.find(whereClause)
-			.populate('user')
+			.populate({
+				path: 'userId',
+				select: 'userId fullName emailAddress registrationNumber accountNumber'
+			})
 			.skip(offset as number)
 			.limit(limit as number)
 			.sort(sort)

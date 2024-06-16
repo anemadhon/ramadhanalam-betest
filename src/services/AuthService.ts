@@ -145,7 +145,7 @@ export default class AuthService {
 
 		await this.accountService.logAccount({
 			...payload,
-			userId: user.userId
+			userId: user._id as string
 		})
 
 		return {

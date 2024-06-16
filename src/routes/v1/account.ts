@@ -6,7 +6,7 @@ import { lists } from '../../schemas/accountSchema'
 const accountController = new AccountController()
 
 router.post(
-	'/lists',
+	'/getAll',
 	validatePayloadSchema(lists),
 	accountController.read.bind(accountController)
 )
