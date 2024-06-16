@@ -27,9 +27,13 @@ const login = z.object({
 	password: passwordSchema
 })
 const refreshToken = z.object({
+	user_id: z.string(),
 	refresh_token: z.string()
+})
+const logout = z.object({
+	user_id: z.string()
 })
 
 export type UserRegistration = z.infer<typeof register>
 export type Login = z.infer<typeof login>
-export { register, login, refreshToken }
+export { register, login, logout, refreshToken }

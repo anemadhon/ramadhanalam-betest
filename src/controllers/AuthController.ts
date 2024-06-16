@@ -135,9 +135,10 @@ export default class AuthController {
 		}
 
 		const token = headerToken.slice(7)
+		const id = req.body.user_id
 
 		try {
-			const endedToken = await this.jwtService.makeTokenExpires(token)
+			const endedToken = await this.jwtService.makeTokenExpires(token, id)
 
 			return res.status(endedToken.status).json({
 				status: `${endedToken.status}`,
@@ -164,7 +165,8 @@ export default class AuthController {
 	): Promise<ResponseApi<{ access_token: string } | { message: string }>> {
 		try {
 			const token: string = req.body.refresh_token
-			const newToken = await this.jwtService.regenerateAccessToken(token)
+			const id: string = req.body.user_id
+			const newToken = await this.jwtService.regenerateAccessToken(token, id)
 
 			return res.status(newToken.status).json({
 				status: `${newToken.status}`,

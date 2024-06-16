@@ -1,4 +1,8 @@
-import jwt, { JwtPayload } from 'jsonwebtoken'
+import jwt, {
+	JsonWebTokenError,
+	JwtPayload,
+	TokenExpiredError
+} from 'jsonwebtoken'
 import { Request, Response, NextFunction } from 'express'
 import { ENV } from '../utils/constants'
 import JwtService from '../services/JwtService'
@@ -47,10 +51,29 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
 		;(req as CustomRequest).token = decoded.id
 		next()
 	} catch (err) {
+		if (err instanceof TokenExpiredError) {
+			return res.status(401).json({
+				status: '401',
+				message: STATUSCODE['401'].text,
+				error: {
+					message: 'Token sudah kadaluarsa'
+				}
+			})
+		}
+		if (err instanceof JsonWebTokenError) {
+			return res.status(401).json({
+				status: '401',
+				message: STATUSCODE['401'].text,
+				error: {
+					message: 'Token tidak valid'
+				}
+			})
+		}
+
 		console.error('err decoded', { err })
-		return res.status(401).json({
-			status: '401',
-			message: STATUSCODE['401'].text
+		return res.status(500).json({
+			status: '500',
+			message: STATUSCODE['500'].text
 		})
 	}
 }

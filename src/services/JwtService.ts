@@ -58,6 +58,9 @@ export default class JwtService {
 			type: 'refresh'
 		})
 
+		await this.redis.sadd(`${REDIS.NAME}:token_${user.userId}`, accessToken)
+		await this.redis.sadd(`${REDIS.NAME}:token_${user.userId}`, refreshToken)
+
 		return {
 			status: 200,
 			data: {
@@ -68,13 +71,29 @@ export default class JwtService {
 	}
 
 	async regenerateAccessToken(
-		refreshToken: string
+		refreshToken: string,
+		userId: string
 	): Promise<ServicesResponse<{ access_token: string } | { message: string }>> {
+		const refreshTokenExist = await this.redis.sismember(
+			`${REDIS.NAME}:token_${userId}`,
+			refreshToken
+		)
+
+		if (!refreshTokenExist) {
+			return {
+				status: 401,
+				data: {
+					message: 'Refresh token tidak valid'
+				}
+			}
+		}
+
 		const decoded = jwt.verify(
 			refreshToken,
 			jwtrefreshTokenSecret
 		) as JwtPayload
 
+		console.log(decoded.exp, Math.ceil(Date.now() / 1000))
 		if (decoded.exp && decoded.exp < Math.ceil(Date.now() / 1000)) {
 			return {
 				status: 401,
@@ -104,12 +123,14 @@ export default class JwtService {
 	}
 
 	async makeTokenExpires(
-		token: string
+		token: string,
+		userId: string
 	): Promise<ServicesResponse<{ message: string }>> {
 		await this.redis.sadd(`${REDIS.NAME}:blacklist`, token)
+		await this.redis.del(`${REDIS.NAME}:token_${userId}`)
 
 		return {
-			status: 200,
+			status: 204,
 			data: {
 				message: 'token berhasil dinonaktifkan'
 			}
