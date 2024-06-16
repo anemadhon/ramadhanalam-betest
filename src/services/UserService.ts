@@ -93,7 +93,7 @@ export default class UserService {
 		}
 		const updated = await this.userRepository.update(
 			{ userId: payload.user_id as string },
-			validPayload
+			{ $set: { ...validPayload } }
 		)
 
 		if (updated) {

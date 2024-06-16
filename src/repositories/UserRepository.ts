@@ -1,4 +1,4 @@
-import { Model } from 'mongoose'
+import { FilterQuery, Model } from 'mongoose'
 import { UserInterface } from '../models/User'
 import { UserLists } from '../schemas/userSchema'
 import { UserRegistration } from '../schemas/authSchema'
@@ -105,11 +105,12 @@ export default class UserRepository {
 	}
 
 	async update(
-		whereClause: Record<string, string>,
-		toBeUpdated: Partial<UserInterface>
+		whereClause: FilterQuery<Partial<UserInterface>>,
+		toBeUpdated: FilterQuery<Partial<UserInterface>>
 	): Promise<UserInterface | null> {
 		return await this.userModel
-			.findOneAndUpdate(whereClause, toBeUpdated)
+			.findOneAndUpdate(whereClause, toBeUpdated, { returnOriginal: false })
+			.select('-_id -__v')
 			.lean()
 			.exec()
 	}
