@@ -1,0 +1,36 @@
+services:
+  app:
+    build: .
+    container_name: ms-ramadhanalam-betest
+    ports:
+      - '3004:3003'
+    env_file:
+      - .env
+    depends_on:
+      - db_ramadhanalam_betest
+      - redis_ramadhanalam_betest
+    links:
+      - db_ramadhanalam_betest
+      - redis_ramadhanalam_betest
+
+  db_ramadhanalam_betest:
+    image: mongo:latest
+    container_name: db_ramadhanalam_betest
+    ports:
+      - '27018:27017'
+    volumes:
+      - db_ramadhanalam_betest-data:/data/db
+
+  redis_ramadhanalam_betest:
+    image: redis:latest
+    container_name: redis_ramadhanalam_betest
+    ports:
+      - '6380:6379'
+    volumes:
+      - redis_ramadhanalam_betest-data:/data
+    command:
+      ['redis-server', '--bind', 'redis_ramadhanalam_betest', '--port', '6379']
+
+volumes:
+  db_ramadhanalam_betest-data:
+  redis_ramadhanalam_betest-data:

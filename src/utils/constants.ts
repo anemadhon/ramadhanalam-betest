@@ -29,7 +29,7 @@ const REDIS = {
 	NAME: process.env.REDIS_NAME!,
 	HOST: process.env.REDIS_HOST!,
 	PORT: process.env.REDIS_PORT!,
-	MAX_ATTEMPT: process.env.REDIS_MAX_ATTEMPT || '1'
+	MAX_ATTEMPT: process.env.REDIS_MAX_ATTEMPT || '3'
 }
 const JWT = {
 	ACCESS_EXPIRED_IN: process.env.JWT_EXPIRED_IN || '2m',
