@@ -15,7 +15,7 @@ import {
 const userController = new UserController()
 
 router.post(
-	'/lists',
+	'/list',
 	validatePayloadSchema(lists),
 	userController.read.bind(userController)
 )

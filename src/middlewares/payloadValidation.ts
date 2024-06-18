@@ -26,7 +26,7 @@ const validatePayloadSchema =
 const validateParamSchema =
 	(schema: ZodSchema) => (req: Request, res: Response, next: NextFunction) => {
 		try {
-			schema.parse(req.body)
+			schema.parse(req.params)
 			next()
 		} catch (error) {
 			return res.status(400).json({

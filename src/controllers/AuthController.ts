@@ -10,6 +10,7 @@ import {
 	ApiResponseError,
 	StatusCode
 } from '../types/responseType'
+import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken'
 
 const { STATUSCODE } = ENV
 
@@ -137,6 +138,24 @@ export default class AuthController {
 				data: newToken?.data
 			})
 		} catch (error) {
+			if (error instanceof TokenExpiredError) {
+				return res.status(401).json({
+					status: '401',
+					message: STATUSCODE['401'].text,
+					error: {
+						message: 'Refresh Token sudah kadaluarsa'
+					}
+				})
+			}
+			if (error instanceof JsonWebTokenError) {
+				return res.status(401).json({
+					status: '401',
+					message: STATUSCODE['401'].text,
+					error: {
+						message: 'Refresh Token tidak valid'
+					}
+				})
+			}
 			console.error('err exports.refreshToken trycatch', { error })
 			const responses: ErrorResponse<{ message: string }> = {
 				status: '500',

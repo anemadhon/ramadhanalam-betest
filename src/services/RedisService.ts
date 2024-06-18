@@ -21,7 +21,12 @@ export default class RedisService {
 			return null
 		}
 
-		return JSON.parse(obj)
+		const data = JSON.parse(obj)
+
+		delete data._id
+		delete data.__v
+
+		return data
 	}
 
 	async getArrayOfObjects(): Promise<Record<string, string>[]> {
@@ -34,8 +39,8 @@ export default class RedisService {
 			if (obj) {
 				const user = JSON.parse(obj)
 
-				delete user['_id']
-				delete user['__v']
+				delete user._id
+				delete user.__v
 
 				arrayOfObjects.push(user)
 			}

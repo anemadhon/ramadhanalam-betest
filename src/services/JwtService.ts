@@ -94,7 +94,7 @@ export default class JwtService {
 			return {
 				status: 401,
 				data: {
-					message: 'Refresh token telah kadaluarsa'
+					message: 'Refresh token sudah kadaluarsa'
 				}
 			}
 		}

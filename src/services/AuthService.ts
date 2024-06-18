@@ -148,6 +148,8 @@ export default class AuthService {
 			userId: user._id as string
 		})
 
+		delete user._id
+
 		return {
 			status: 200,
 			data: {
